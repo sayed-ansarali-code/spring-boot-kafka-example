@@ -1,0 +1,13 @@
+spring:
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      bootstrap-servers: localhost:9092
+    topic:
+      name: "test-topic"
+  mvc:
+    pathmatch:
+      matching-strategy: "ANT_PATH_MATCHER"
+logging:
+  level:
+    root: INFO
