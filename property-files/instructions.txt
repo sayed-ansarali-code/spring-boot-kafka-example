@@ -1,0 +1,54 @@
+********************References********************
+https://www.conduktor.io/kafka/how-to-install-apache-kafka-on-windows/
+https://kafka.apache.org/documentation/#security_overview
+https://needlify.com/post/install-and-configure-a-fully-functionnal-web-server-on-wsl-2-b1aa0954
+
+********************Install Kafka********************
+https://www.conduktor.io/kafka/how-to-install-apache-kafka-on-windows/
+
+********************Update Configs********************
+zookeeper.properties
+server.properties
+kafka_server_jaas.conf
+kafka_client_jaas.conf
+command-config-admin.properties
+producer-alice.properties
+consumer-bob.properties
+
+********************WSL Console 1********************
+1) start zookeeper
+~/kafka_2.13-3.0.0/bin/zookeeper-server-start.sh ~/kafka_2.13-3.0.0/config/zookeeper.properties
+
+********************WSL Console 2********************
+2) start kafka broker/server
+export KAFKA_OPTS="-Djava.security.auth.login.config=/home/username/kafka_2.13-3.0.0/config/kafka_server_jaas.conf"
+
+~/kafka_2.13-3.0.0/bin/kafka-server-start.sh ~/kafka_2.13-3.0.0/config/server.properties
+
+********************WSL Console 5********************
+3) Create Topic
+export KAFKA_OPTS="-Djava.security.auth.login.config=/home/username/kafka_2.13-3.0.0/config/kafka_client_jaas-admin.conf"
+
+~/kafka_2.13-3.0.0/bin/kafka-acls.sh --add --allow-principal User:alice --operation All  --topic test-topic --command-config command-config-admin.properties   --bootstrap-server localhost:9092
+
+~/kafka_2.13-3.0.0/bin/kafka-topics.sh --create --topic test-topic --partitions 2 --replication-factor 1 --bootstrap-server localhost:9092 --command-config command-config-admin.properties
+
+********************WSL Console 3********************
+4) Start console producer
+~/kafka_2.13-3.0.0/bin/kafka-console-producer.sh --broker-list localhost:9092 --topic test-topic --producer.config=producer-alice.properties
+
+********************WSL Console 4********************
+5) Start console consumer
+~/kafka_2.13-3.0.0/bin/kafka-console-consumer.sh --topic test-topic --from-beginning --consumer.config=consumer-bob.properties  --bootstrap-server=localhost:9092
+org.apache.kafka.common.errors.TopicAuthorizationException: Not authorized to access topics: [test-topic]
+
+********************WSL Console 5********************
+6) Add or Remove ACLs
+
+~/kafka_2.13-3.0.0/bin/kafka-acls.sh --add --allow-principal User:bob --operation Read  --topic test-topic --command-config command-config-admin.properties   --bootstrap-server localhost:9092
+
+~/kafka_2.13-3.0.0/bin/kafka-acls.sh --remove --allow-principal User:bob --operation Read  --topic test-topic --command-config command-config-admin.properties   --bootstrap-server localhost:9092
+
+********************Command to execute the code from within WSL********************
+java -jar demo-0.0.1-SNAPSHOT.jar -Djava.security.auth.login.config="/mnt/d/ansar/kafka/delivery/property-files/kafka_client_jaas_admin.conf" com.example.kafka.demo.DemoApplication
+
